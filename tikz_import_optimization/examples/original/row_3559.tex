@@ -1,0 +1,36 @@
+\documentclass{standalone}
+\usepackage{tikz}
+\usepackage{tikz-3dplot}
+
+\begin{document}
+% Set the 3D view orientation: elevation = 60°, azimuth = 110°
+\tdplotsetmaincoords{60}{110}
+
+\begin{tikzpicture}[scale=3, tdplot_main_coords]
+
+% Define the origin of the coordinate system
+\coordinate (O) at (0,0,0);
+
+% Draw the main (global) coordinate axes
+\draw[red, thick, ->] (O) -- (1,0,0) node[anchor=north east]{$x$};
+\draw[red, thick, ->] (O) -- (0,1,0) node[anchor=north west]{$y$};
+\draw[red, thick, ->] (O) -- (0,0,1) node[anchor=south]{$z$};
+
+% --- Yaw angle arc (rotation about z-axis, in xy-plane) ---
+% Draw a small arc near z = 0.7 to indicate yaw
+\tdplotdrawarc[->, color=black]{(0,0,0.7)}{0.1}{0}{350}{anchor=south west}{yaw}
+
+% --- Pitch angle arc (rotation about y-axis) ---
+% Set theta-plane to 0° (xz-plane), where pitch rotation occurs
+\tdplotsetthetaplanecoords{0}
+% Draw pitch arc using the rotated coordinate system
+\tdplotdrawarc[tdplot_rotated_coords, ->, color=black]{(0,0,0.7)}{0.1}{110}{460}{anchor=south west}{pitch}
+
+% --- Roll angle arc (rotation about x-axis) ---
+% Set theta-plane to -90° to align with yz-plane for roll
+\tdplotsetthetaplanecoords{-90}
+% Draw roll arc in the appropriately rotated frame
+\tdplotdrawarc[tdplot_rotated_coords, ->, color=black]{(0,0,0.7)}{0.1}{120}{470}{anchor=south west}{roll}
+
+\end{tikzpicture}
+\end{document}

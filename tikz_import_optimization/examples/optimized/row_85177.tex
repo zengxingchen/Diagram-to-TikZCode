@@ -1,0 +1,26 @@
+\documentclass[border=2mm]{standalone}
+\usepackage{tikz}
+\begin{document}
+
+\begin{tikzpicture}
+  % Draw coordinate axes
+  \draw[->] (-1, 0) -- (4.2, 0); % x-axis
+  \draw[->] (0, -1) -- (0, 4.2) node[above] {$f(x)$}; % y-axis
+
+  % Plot the function f(x) = 10/x + 2, adjusted to match the main coordinate system
+  % Original used scale=0.5 and domain=1:8 → effective x: 0.5 to 4, y: (10/x+2)*0.5
+  % To replicate visually without scaling, we plot f(x) = 5/x + 1 over x in [1,4]
+  \draw[domain=1:4, smooth, variable=\x, blue] plot ({\x}, {5/\x + 1});
+
+  % Draw vertical lines from x-axis up to the curve
+  \draw (1, -0.2) -- (1, 3.48);   % at x = 1
+  \draw (2, -0.2) -- (2, 2.24);   % at x = 2
+  \draw (4, -0.2) -- (4, 1.62);   % at x = 4
+
+  % Label points on the x-axis
+  \draw (1, -0.2) node[right] {$a_t$};
+  \draw (2, -0.2) node[right] {$a_{t+1}$};
+  \draw (4, -0.2) node[right] {$x_1$};
+\end{tikzpicture}
+
+\end{document}

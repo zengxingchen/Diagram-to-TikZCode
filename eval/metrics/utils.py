@@ -1,0 +1,87 @@
+from torch.cuda import is_available as is_torch_cuda_available
+from transformers.utils import is_torch_npu_available, is_torch_xpu_available
+
+# https://github.com/huggingface/peft/blob/c4cf9e7d3b2948e71ec65a19e6cd1ff230781d13/src/peft/utils/other.py#L60-L71
+def infer_device():
+    if is_torch_cuda_available():
+        torch_device = "cuda"
+    elif is_torch_xpu_available():
+        torch_device = "xpu"
+    elif is_torch_npu_available():
+        torch_device = "npu"
+    else:
+        torch_device = "cpu"
+    return torch_device
+
+from base64 import b64decode
+from codecs import encode
+from io import BytesIO
+from os.path import isfile
+
+from PIL import Image, ImageChops, ImageOps
+import pymupdf
+import requests
+from transformers.utils.hub import is_remote_url
+
+DUMMY_IMAGE = Image.new("RGB", (24, 24), color="white")
+
+def convert(image, filetype):
+    image.save(imgbytes:=BytesIO(), format=filetype)
+    return Image.open(imgbytes)
+
+def remove_alpha(image, bg):
+    # https://stackoverflow.com/a/62414364
+    background = Image.new('RGBA', image.size, bg)
+    alpha_composite = Image.alpha_composite(background, image.convert("RGBA"))
+    return alpha_composite.convert("RGB")
+
+# https://stackoverflow.com/a/10616717
+def trim(image, bg="white"):
+    bg = Image.new(image.mode, image.size, bg)
+    diff = ImageChops.difference(image, bg)
+    #diff = ImageChops.add(diff, diff, 2.0, -10)
+    return image.crop(bbox) if (bbox:=diff.getbbox()) else image
+
+def expand(image, size, do_trim=False, bg="white"):
+    """Expand image to a square of size {size}. Optionally trims borders first."""
+    image = trim(image, bg=bg) if do_trim else image
+    return ImageOps.pad(image, (size, size), color=bg, method=Image.Resampling.LANCZOS)
+
+#  based on transformers/image_utils.py (added support for rgba images)
+def load(image: Image.Image | str | bytes, bg="white", timeout=None):
+    if isinstance(image, bytes):
+        # assume image bytes and open
+        image = Image.open(BytesIO(image))
+    elif isinstance(image, str):
+        if is_remote_url(image):
+            # https://stackoverflow.com/a/69791396
+            headers = {'user-agent': 'Mozilla/5.0 (X11; Linux x86_64; rv:68.0) Gecko/20100101 Firefox/68.0'}
+            image = Image.open(BytesIO(requests.get(image, timeout=timeout, headers=headers).content))
+        elif isfile(image):
+            image = Image.open(image)
+        else:
+            try:
+                image.removeprefix("data:image/")
+                image = Image.open(BytesIO(b64decode(image)))
+            except Exception as e:
+                raise ValueError(
+                    "Incorrect image source. "
+                    "Must be a valid URL starting with `http://` or `https://`, "
+                    "a valid path to an image file, bytes, or a base64 encoded "
+                    f"string. Got {image}. Failed with {e}"
+                )
+
+    image = ImageOps.exif_transpose(image) # type: ignore
+    return  remove_alpha(image, bg=bg)
+
+def redact(doc, rot_13=False):
+    for page in (copy:=pymupdf.open("pdf", doc.tobytes())):
+        for word in page.get_text("words", clip=pymupdf.INFINITE_RECT()): # type: ignore
+            text = encode(word[4], "rot13") if rot_13 else None
+            page.add_redact_annot(word[:4], text=text, fill=False) # type: ignore
+        page.apply_redactions(  # type: ignore
+            images=pymupdf.PDF_REDACT_IMAGE_NONE, # type: ignore
+            graphics=pymupdf.PDF_REDACT_LINE_ART_NONE # type: ignore
+        )
+    return copy
+

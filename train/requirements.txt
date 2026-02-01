@@ -1,0 +1,27 @@
+# DaVinci RL training stage requirements
+#
+# These pin only the third-party imports used inside this folder
+# (the reward function and its three subprocess workers). They do NOT
+# include the trainer itself; please install EasyR1 separately and
+# follow its own requirement file:
+#   https://github.com/hiyouga/EasyR1
+#
+# DreamSim must be installed in its own conda env (see README.md).
+
+# Numerics / images
+numpy>=1.24
+opencv-python>=4.8
+Pillow>=10.0
+scikit-image>=0.21
+scipy>=1.11
+
+# PDF rendering / parsing
+pdf2image>=1.17        # tex-pdf -> png   (requires poppler on the system)
+pdfCropMargins>=2.1    # auto-crop PDF whitespace
+pymupdf>=1.24          # also exposes `fitz` for vector parsing
+
+# DreamSim deps (only required *inside* the DreamSim env, but listed here
+# for completeness; the worker re-imports them in its own subprocess)
+torch>=2.0
+torchvision>=0.15
+# dreamsim                # install from pip in the DreamSim conda env only
