@@ -3,7 +3,7 @@
 Xingchen Zeng, Zhewei Su, Hengming Zhang, Juyong Jiang, Jiazhi Xia, Wei Zeng
 
 ICLR 2026 · [Paper](https://openreview.net/pdf?id=OAXECnLxuk) · [Dataset](https://huggingface.co/datasets/lewy666/TikZ30K) · [Model](https://huggingface.co/lewy666/DaVinci-CommunityV)
-<div>
+<div> 
 <img src="assets/framework.png" alt="DaVinci framework" width="92%">
 </div>
 
